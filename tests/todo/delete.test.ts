@@ -37,20 +37,20 @@ test.describe("Delete request negative scenario", () => {
 
     test("Deletion of Todo should not work if Authentication Details are not passed", async ({ authenticatedRequest, request }, testInfo) => {
         const id = testInfo['id']
-        const deleteResp = await request.delete(`/v2/todo/${id}`)
-        expect(deleteResp.status()).toBe(401)
+        const resp = await request.delete(`/v2/todo/${id}`)
+        expect(resp.status()).toBe(401)
     })
 
     test("One user should not be able to Delete other Users Todo", async ({ authenticatedRequest, request }, testInfo) => {
         const id = testInfo['id']
         const unique = randomUUID()
-        const deleteResp = await request.delete(`/v2/todo/${id}`, {
+        const resp = await request.delete(`/v2/todo/${id}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${getHash(unique, unique)}`
             }
         })
-        expect(deleteResp.status()).toBe(401)
+        expect(resp.status()).toBe(401)
     })
 
     test.afterEach(async ({ authenticatedRequest }, testInfo) => {

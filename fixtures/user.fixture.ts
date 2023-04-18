@@ -23,7 +23,7 @@ export const test = base.extend<{authenticatedRequest:AuthenticatedRequest}>({
         const {status} = await createUser(request,{username:unique,password:unique})
         expect(status).toBe(201)
         const ar = new AuthenticatedRequest(request,unique,unique);
-        use(ar)
+        await use(ar)
         await deleteMe(ar)
         
     }

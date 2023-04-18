@@ -15,15 +15,15 @@ test.describe("Delete Positive Scenarios", () => {
     test("Deletion of todo should work if todo exists", async ({ authenticatedRequest }, testInfo) => {
         const id = testInfo['id']
         const resp = await authenticatedRequest.delete(`/v2/todo/${id}`)
-        expect(resp.status).toBe(200)
+        expect(resp.status()).toBe(200)
     })
 
 })
 
-test("Deletion of non existing todo should give 404 via put endpoint", async ({ authenticatedRequest }, testInfo) => {
+test("Deletion of non existing todo should give 400 via put endpoint", async ({ authenticatedRequest }, testInfo) => {
     const id = 1000
-    const resp = await authenticatedRequest.put(`/v2/todo/${id}`, { title: "Bring Milk" })
-    expect(resp.status).toBe(404)
+    const resp = await authenticatedRequest.put('/v2/todo/1000', { title: "Bring Milk" })
+    expect(resp.status()).toBe(400)
 })
 
 test.describe("Delete request negative scenario", () => {

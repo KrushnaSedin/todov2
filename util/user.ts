@@ -3,7 +3,7 @@ import { AuthenticatedRequest } from "../fixtures/authenticatedRequest";
 
 export async function createUser(request:APIRequestContext,body:{username:string,password:string}){
 
-    const resp = await request.post('/v2/todo',{
+    const resp = await request.post('/v2/user',{
         data: body,
         headers:{
             "Content-Type":"application/json"

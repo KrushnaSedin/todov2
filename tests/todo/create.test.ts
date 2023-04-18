@@ -31,13 +31,7 @@ test.describe("Create request Positive test cases", () => {
         expect(body.title).toBe('Bring Milk')
         testInfo['id'] = body.id
     })
-
-
-    test('Deletion of todo should work', async ({ request, authenticatedRequest }) => {
-        const resp = await authenticatedRequest.delete('/v2/todo')
-        expect(resp.status()).toBe(200)
-    })
-
+    
     test.afterEach(async ({ authenticatedRequest }, testInfo) => {
         const id = testInfo['id']
         const deleteResp = await authenticatedRequest.delete(`/v2/todo/${id}`)

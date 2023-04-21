@@ -1,7 +1,8 @@
 import { expect } from "@playwright/test";
 import { test } from '../../fixtures/user.fixture'
-import {randomUUID} from 'crypto'
-import {getHash} from '../../fixtures/authenticatedRequest'
+import { randomUUID } from 'crypto'
+import { getHash } from '../../fixtures/authenticatedRequest'
+import { createUser } from "../../util/user";
 
 test.describe("Delete Positive Scenarios", () => {
 
@@ -27,7 +28,7 @@ test("Deletion of non existing todo should give 400 via put endpoint", async ({ 
 })
 
 test.describe("Delete request negative scenario", () => {
-    
+
     test.beforeEach(async ({ authenticatedRequest }, testInfo) => {
         const resp = await authenticatedRequest.post('/v2/todo', { title: 'Delete Todo data', status: 'ACTIVE' })
         const body = await resp.json()
@@ -41,18 +42,6 @@ test.describe("Delete request negative scenario", () => {
         expect(resp.status()).toBe(401)
     })
 
-    test("One user should not be able to Delete other Users Todo", async ({ authenticatedRequest, request }, testInfo) => {
-        const id = testInfo['id']
-        const unique = randomUUID()
-        const resp = await request.delete(`/v2/todo/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${getHash(unique, unique)}`
-            }
-        })
-        expect(resp.status()).toBe(401)
-    })
-
     test.afterEach(async ({ authenticatedRequest }, testInfo) => {
         const id = testInfo['id']
         const deleteResp = await authenticatedRequest.delete(`/v2/todo/${id}`)
@@ -61,3 +50,36 @@ test.describe("Delete request negative scenario", () => {
 
 })
 
+test.describe('Unauthorized by different user', () => {
+    test.beforeEach(async ({ authenticatedRequest, request }, testInfo) => {
+        const resp = await authenticatedRequest.post('/v2/todo', { title: 'Bring Milk' })
+        const body = await resp.json()
+        testInfo['id'] = body.id
+        const unique = randomUUID()
+        await createUser(request, {
+            username: unique,
+            password: unique
+        });
+        testInfo['unique'] = unique
+    })
+    test('One user should not be able to Delete other Users Todo', async ({ request }, testInfo) => {
+
+        const id = testInfo['id']
+        const resp = await request.delete(`/v2/todo/${id}`, {
+            headers: {
+                'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
+            }
+        })
+        expect(resp.status()).toBe(404)
+    })
+    test.afterEach(async ({ authenticatedRequest, request }, testInfo) => {
+
+        const id = testInfo['id']
+        await request.delete('/v2/user', {
+            headers: {
+                'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
+            }
+        })
+        await authenticatedRequest.delete(`/v2/todo/${id}`)
+    })
+})

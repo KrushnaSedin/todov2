@@ -29,6 +29,7 @@ test.describe("Create request Positive test cases", () => {
         expect(body.title).not.toBe(null)
         expect(body.id).not.toBe(null)
         expect(body.title).toBe('Bring Milk')
+        expect(body.status).toBe("DONE")
         testInfo['id'] = body.id
     })
     
@@ -46,7 +47,7 @@ test.describe("Create request negative scebarios", () => {
         testInfo['id'] = body.id
     })
 
-    test("Creation of todo should give 400 when status value is not eaither ACTIVE or DONE", async ({ authenticatedRequest }, testInfo) => {
+    test("Creation of todo should give 400 when status value is not either ACTIVE or DONE", async ({ authenticatedRequest }, testInfo) => {
         const resp = await authenticatedRequest.post('/v2/todo', { status: "INACTIVE" })
         const body = await resp.json()
         expect(resp.status()).toBe(400)

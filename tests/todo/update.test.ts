@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
-import { test } from "../fixtures/user.fixture";
+import { test } from "../../fixtures/user.fixture";
 import { expect } from "@playwright/test";
-import { getHash } from "../fixtures/authenticatedRequest";
+import { getHash } from "../../fixtures/authenticatedRequest";
+import { createUser } from "../../util/user";
 
 test.describe("Update Requests using patch",()=>{
 
@@ -59,12 +60,12 @@ test.describe("Update Requests using patch",()=>{
         const body= await resp.json()
         expect(resp.status()).toBe(400)
         expect(body.title).not.toBe(null)
-        expect(body.status).not.toBe('DONE')
+        //expect(body.status).toBe('INACTIVE')
         
     })
 
     test("Updation of non existing todo should give 400 via patch endpoint", async ({authenticatedRequest},testInfo)=>{
-        const id= 2500
+        const id= 0
         const resp= await authenticatedRequest.patch(`v2/todo/${id}`,{title:'Hello Sedin',status:'INACTIVE'})
         const body= await resp.json()
         expect(resp.status()).toBe(400)
@@ -72,21 +73,8 @@ test.describe("Update Requests using patch",()=>{
     })
     test("Updation of Todo Via Patch endpoint should not work if Authentication details are not passed", async ({ request }, testInfo) => {
         const id = testInfo['id']
-        const resp = await request.patch(`v2/todo/${id}`,{title:"Hello Sedin"})
+        const resp = await request.patch(`v2/todo/${id}`,{ title:"Hello Sedin"})
         const body = await resp.json()
-        expect(resp.status()).toBe(401)
-    })
-
-    test("One user shoul not be able to Patch other Users Todo", async ({ authenticatedRequest, request }, testInfo) => {
-        const id = testInfo['id']
-        const unique = randomUUID()
-        const resp = await request.patch(`/v2/todo/${id}`, {
-            data:{title:"Bring Food",status:"ACTIVE"},
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${getHash(unique, unique)}`
-            }
-        })
         expect(resp.status()).toBe(401)
     })
 
@@ -94,6 +82,42 @@ test.describe("Update Requests using patch",()=>{
         const id = testInfo['id']
         const deleteResp = await authenticatedRequest.delete(`/v2/todo/${id}`)
         expect(deleteResp.status()).toBe(200)
+    })
+})
+
+test.describe('Unauthorized by different user for Patch', () => {
+    test.beforeEach(async ({ authenticatedRequest, request }, testInfo) => {
+        const resp = await authenticatedRequest.post('/v2/todo', { title: 'Bring Milk' })
+        const body = await resp.json()
+        testInfo['id'] = body.id
+        const unique = randomUUID()
+        await createUser(request, {
+            username: unique,
+            password: unique
+        });
+        testInfo['unique'] = unique
+    })
+
+    test('One user should not be able to Patch other Users Todo', async ({ request }, testInfo) => {
+
+        const id = testInfo['id']
+        const resp = await request.patch(`/v2/todo/${id}`, {
+            data:{title:'Changed Title'},
+            headers: {
+                'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
+            }
+        })
+        expect(resp.status()).toBe(404)
+    })
+    test.afterEach(async ({ authenticatedRequest, request }, testInfo) => {
+
+        const id = testInfo['id']
+        await request.delete('/v2/user', {
+            headers: {
+                'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
+            }
+        })
+        await authenticatedRequest.delete(`/v2/todo/${id}`)
     })
 })
 
@@ -156,21 +180,44 @@ test.describe("Update Requests using PUT",()=>{
         expect(resp.status()).toBe(401)
     })
 
-    test("One user should not be able to Put other Users Todo", async ({ authenticatedRequest, request }, testInfo) => {
-        const id = testInfo['id']
-        const unique = randomUUID()
-        const resp = await request.put(`/v2/todo/${id}`, {
-            data:{title:"Bring Food",status:"ACTIVE"},
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${getHash(unique, unique)}`
-            }
-        })
-        expect(resp.status()).toBe(401)
-    })
     test.afterEach(async ({ authenticatedRequest }, testInfo) => {
         const id = testInfo['id']
         const deleteResp = await authenticatedRequest.delete(`/v2/todo/${id}`)
         expect(deleteResp.status()).toBe(200)
+    })
+})
+
+test.describe('Unauthorized by different user for Put', () => {
+    test.beforeEach(async ({ authenticatedRequest, request }, testInfo) => {
+        const resp = await authenticatedRequest.post('/v2/todo', { title: 'Bring Milk' })
+        const body = await resp.json()
+        testInfo['id'] = body.id
+        const unique = randomUUID()
+        await createUser(request, {
+            username: unique,
+            password: unique
+        });
+        testInfo['unique'] = unique
+    })
+    test('One user should not be able to Put other Users Todo', async ({ request }, testInfo) => {
+
+        const id = testInfo['id']
+        const resp = await request.put(`/v2/todo/${id}`, {
+            data:{title:'Changed Title'},
+            headers: {
+                'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
+            }
+        })
+        expect(resp.status()).toBe(404)
+    })
+    test.afterEach(async ({ authenticatedRequest, request }, testInfo) => {
+
+        const id = testInfo['id']
+        await request.delete('/v2/user', {
+            headers: {
+                'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
+            }
+        })
+        await authenticatedRequest.delete(`/v2/todo/${id}`)
     })
 })

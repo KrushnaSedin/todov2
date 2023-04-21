@@ -19,15 +19,3 @@ export async function deleteMe(authenticatedRequest:AuthenticatedRequest){
     console.log('Deleted User')
     return resp.status()
 }
-export type TodoResponseBody = {
-    id:number,
-    title:string,
-    status:string,
-    createdAt:string,
-    updatedAt:string
-  }
-  export async function getAllTodos(authenticatedRequest:AuthenticatedRequest){
-    const allTodos = await authenticatedRequest.get('/v2/todo')
-      const body:TodoResponseBody[] = await allTodos.json()
-      return {status:allTodos.status(),body}
-  }

@@ -203,7 +203,7 @@ test.describe('Unauthorized by different user for Put', () => {
 
         const id = testInfo['id']
         const resp = await request.put(`/v2/todo/${id}`, {
-            data:{title:'Changed Title'},
+            data:{title:'Changed Title',status:"DONE"},
             headers: {
                 'Authorization': `Basic ${getHash(testInfo['unique'], testInfo['unique'])}`
             }

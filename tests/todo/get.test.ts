@@ -108,7 +108,7 @@ test.describe('Get All',()=>{
       const todos = ['Bring Milk','Bring Vegitables']
       const createdTodos:TodoResponseBody[] = []
       for (const todo in todos){
-        const resp = await authenticatedRequest.post('/v2/todo', { title: 'Bring Milk' })
+        const resp = await authenticatedRequest.post('/v2/todo', { title: todo })
         const body = await resp.json()
         createdTodos.push(body)
       }
@@ -127,8 +127,9 @@ test.describe('Get All',()=>{
 
     test.afterEach(async ({authenticatedRequest},testInfo)=>{
       const createdTodos:TodoResponseBody[] = testInfo['todos']
-      const id= createdTodo.id
+      
       for(const createdTodo of createdTodos){
+        const id= createdTodo.id
         const resp = await authenticatedRequest.delete(`/v2/todo/${id}`)
         expect(resp.status()).toBe(200)
        }
